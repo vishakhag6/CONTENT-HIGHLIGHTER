@@ -1,4 +1,10 @@
-# highlight-content
+# Highlighter(CONTENT HIGHLIGHTER)
+See [Demo](https://content-highlighter.web.app).
+
+## About
+```
+Vue JS application that allows the user to create and read a blog post with word highlighting capabilities like Medium does.
+```
 
 ## Project setup
 ```
@@ -14,11 +20,3 @@ npm run serve
 ```
 npm run build
 ```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
