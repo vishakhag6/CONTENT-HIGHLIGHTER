@@ -3,7 +3,7 @@
     <div class="nav__left">
       <h1 class="logo">
         <a href="javascript:void(0);">
-          <img src="../assets/logo.png" alt="Logo" width="45" height="45" />
+          <img src="../assets/logo-new.jpg" alt="Logo" width="45" height="45" />
         </a>
       </h1>
       <ul class="flex-div">
@@ -29,8 +29,9 @@ export default class Nav extends Vue {
 
 <style scoped lang="scss">
 .nav {
-  padding: 0 12px;
-  background: #222;
+  font-family: 'Roboto', sans-serif;
+  padding: 12px 24px;
+box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05);
 
   &__left {
     display: flex;
@@ -39,9 +40,10 @@ export default class Nav extends Vue {
 
   a {
     text-decoration: none;
-    padding: 13px;
-    font-weight: bold;
-    color: #fff;
+    padding: 24px;
+    font-weight: 400;
+    color: #333;
+    font-size: 17px;
 
     &:hover,
     &:focus,
@@ -52,6 +54,8 @@ export default class Nav extends Vue {
 
     &.router-link-exact-active {
       color: #42b983;
+      font-weight: 600;
+      opacity: 1;
     }
   }
 }

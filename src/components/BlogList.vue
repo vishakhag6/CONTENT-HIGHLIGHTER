@@ -1,6 +1,6 @@
 <template>
   <div class="container--small">
-    <div class="blog-list" v-if="loading && blogs.length > 0">
+    <div class="blog-list" v-if="!loading && blogs.length > 0">
       <h1 class="heading text-center">Welcome to blog world</h1>
       <router-link class="card-link" :to="'/blog/' + blog.id" v-for="blog in blogs" :key="blog.id">
         <div class="card">
@@ -23,6 +23,7 @@
 
 <script>
 import axios from "axios";
+import { URL } from "../store/constants";
 
 export default {
   name: "BlogList",
@@ -33,12 +34,21 @@ export default {
     };
   },
   created() {
-    axios.get("https://jsonplaceholder.typicode.com/posts").then(response => {
+    this.getAllPostData();
+  },
+  methods: {
+    async getAllPostData() {
       this.loading = true;
-      this.blogs = response.data.slice(0, 10);
-      this.$store.commit("setBlogData", this.blogs);
-    });
-    this.loading = false;
+      try {
+        const response = await axios(`${URL}`);
+        this.blogs = response.data.slice(0, 10);
+        this.$store.commit("setBlogData", this.blogs);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        this.loading = false;
+      }
+    }
   }
 };
 </script>
@@ -59,6 +69,12 @@ export default {
   &__footer {
     padding: 0.75rem 1.25rem;
     color: #333;
+  }
+
+  &__title,
+  &__author,
+  &__body {
+    line-height: 28px;
   }
 
   &__header,
@@ -83,6 +99,7 @@ export default {
     font-size: 13px;
 
     &-img {
+      min-width: 50px;
       width: 50px;
       height: 50px;
       background: #666;

@@ -1,6 +1,6 @@
 <template>
   <div class="container--small">
-    <div class="blog" v-if="loading">
+    <div class="blog" v-if="!loading">
       <h1 class="heading">Blog Detail</h1>
       <h2
         class="subheading"
@@ -14,16 +14,16 @@
       </HighLight>
 
       <!-- Preview -->
-      <div class="card" v-for="pre in previewObj" :key="pre.id">
+      <div class="card" v-for="pre in previewObj" :key="pre.id" :id="pre.id" ref="pre.id">
         <div class="card__inner">
           <div class="card__header">
             <div class="card__author-img"></div>
             <div>
-              <h1 class="card__title">{{ pre.title }}</h1>
+              <h1 class="card__title">{{pre.title}}</h1>
               <h2 class="card__author">author</h2>
             </div>
           </div>
-          <div class="card__body">{{ pre.body }}</div>
+          <div class="card__body" v-html="pre.body"></div>
         </div>
       </div>
     </div>
@@ -37,6 +37,7 @@
 import { mapState } from "vuex";
 import axios from "axios";
 import HighLight from "./HighLight";
+import { URL } from "../store/constants";
 
 export default {
   name: "Blog",
@@ -50,28 +51,47 @@ export default {
       blog: {},
       highLightArr: [],
       tempArr: [],
-      previewObj: []
+      previewObj: [],
+      partialHighLightArr: []
     };
   },
   created() {
-    if (this.blogArr.length <= 0) {
-      axios.get("https://jsonplaceholder.typicode.com/posts").then(response => {
-        this.loading = true;
-        this.blogs = response.data.slice(0, 10);
-        this.$store.commit("setBlogData", this.blogs);
-      });
-    }
     this.getData();
   },
+  mounted() {
+    if (sessionStorage.highLightArr) {
+      this.partialHighLightArr = sessionStorage.highLightArr.split(",");
+    }
+  },
+  watch: {
+    highLightArr(newName) {
+      sessionStorage.highLightArr = newName;
+    }
+  },
   methods: {
-    getData() {
-      axios
-        .get(`https://jsonplaceholder.typicode.com/posts/${this.id}`)
-        .then(response => {
-          this.loading = true;
-          this.blog = response.data;
+    async getData() {
+      this.loading = true;
+      try {
+        const responseList = await axios(`${URL}`);
+        const response = await axios(`${URL}/${this.id}`);
+
+        this.blogs = responseList.data.slice(0, 10);
+        this.$store.commit("setBlogData", this.blogs);
+
+        this.blog = response.data;
+        this.partialHighLightArr.forEach(item => {
+          if (this.blog.body.indexOf(item) > -1) {
+            this.blog.body = this.blog.body.replace(
+              item,
+              '<span class="highlight">' + item + "</span>"
+            );
+          }
         });
-      this.loading = false;
+      } catch (err) {
+        console.error(err);
+      } finally {
+        this.loading = false;
+      }
     },
     onHighlight(text) {
       if (window.getSelection().rangeCount > 0) {
@@ -81,7 +101,15 @@ export default {
           text.match(/[0-9]/i)
         ) {
           this.tempArr.push(text);
+
           this.highLightArr = [...new Set(this.tempArr)];
+
+          if (this.partialHighLightArr.length > 0) {
+            this.highLightArr = [
+              ...this.partialHighLightArr,
+              ...this.highLightArr
+            ];
+          }
 
           const selection = window.getSelection();
           const range = selection.getRangeAt(0);
@@ -103,21 +131,38 @@ export default {
     },
     previewHandler() {
       this.previewObj = this.blogArr.filter(item => {
-        for (const key in this.highLightArr) {
-          if (item.body.toLowerCase().includes(this.highLightArr[key])) {
-            return true;
-          }
+        // for (const key in this.highLightArr) {
+        //   if (item.body.toLowerCase().includes(this.highLightArr[key])) {
+        //     item.body = item.body.replace(this.highLightArr[key], `<span class="highlight"> ${ this.highLightArr[key] } </span>`)
+        //     return true;
+        //   }
+        // }
+        if (
+          item.body
+            .toLowerCase()
+            .includes(this.highLightArr[this.highLightArr.length - 1])
+        ) {
+          item.body = item.body.replace(
+            this.highLightArr[this.highLightArr.length - 1],
+            `<span class="highlight"> ${
+              this.highLightArr[this.highLightArr.length - 1]
+            } </span>`
+          );
+          return true;
         }
       });
     }
   },
   computed: {
-    ...mapState(["blogArr"])
+    ...mapState(["blogArr", "paraValue"])
   }
 };
 </script>
 
 <style scoped lang="scss">
+  #para {
+    line-height: 28px;
+  }
 .card {
   border-radius: 4px;
   border: 1px solid rgba(0, 0, 0, 0.125);
@@ -130,6 +175,11 @@ export default {
     color: #333;
   }
 
+  &__title,
+  &__author,
+  &__body {
+    line-height: 28px;
+  }
   &__header,
   &__footer {
     margin-bottom: 0;
@@ -152,6 +202,7 @@ export default {
     font-size: 13px;
 
     &-img {
+      min-width: 50px;
       width: 50px;
       height: 50px;
       background: #666;
